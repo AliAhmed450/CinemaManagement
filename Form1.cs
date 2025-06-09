@@ -1,8 +1,4 @@
-using System.Drawing.Text;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using WinFormAnimation;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ScrollBar;
 
 namespace ProjectWinForm
 {
@@ -10,7 +6,10 @@ namespace ProjectWinForm
     public partial class Form1 : Form
     {
         AdminUserWrapper adminUserWrapper;
-        enum Pages { LoginPage, BookingPage, AdminPage }
+        List<CustomerWrapper> CustomerWrappers = new List<CustomerWrapper>();
+        enum Pages { LoginPage, BookingPage, AdminPage, AddMovie, RemoveMovie,ShowBooking,
+            CustomerDetails
+        }
 
         Pages pageOpened = Pages.LoginPage;
         public Form1()
@@ -23,25 +22,98 @@ namespace ProjectWinForm
             rightPanel.Location = new Point(leftPanel.Width, 0);
             rightPanel.Size = new Size((1980 / 100) * 85 + 20, rightPanel.Height);
             LoginPageComponents();
+
+            BackButton.Click += (s, e) => BackButtonClick();
+            ShowBookingPageButton.Click += (s, e) => ShowBookings();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             adminUserWrapper = new AdminUserWrapper("admin", "password123");
-            MoviesWrappers.Add(new MoviesWrapper(1, "FIFTY SHADES OF GREY", "12:00 AM", 2000.00, "C:/Users/Laptop Solutions/Downloads/GenAsim.jpeg"));
-            MoviesWrappers.Add(new MoviesWrapper(1, "FIFTY SHADES OF GREY", "12:00 AM", 2000.00, "C:/Users/Laptop Solutions/Downloads/GenAsim.jpeg"));
-            MoviesWrappers.Add(new MoviesWrapper(1, "FIFTY SHADES OF GREY", "12:00 AM", 2000.00, "C:/Users/Laptop Solutions/Downloads/GenAsim.jpeg"));
-            MoviesWrappers.Add(new MoviesWrapper(1, "FIFTY SHADES OF GREY", "12:00 AM", 2000.00, "C:/Users/Laptop Solutions/Downloads/GenAsim.jpeg"));
-            MoviesWrappers.Add(new MoviesWrapper(1, "FIFTY SHADES OF GREY", "12:00 AM", 2000.00, "C:/Users/Laptop Solutions/Downloads/GenAsim.jpeg"));
+
+            var MoviesLines = File.ReadAllLines("Movies.txt");
+
+            foreach (var line in MoviesLines)
+            {
+                var parts = line.Split(',');
+                if (parts.Length == 5)
+                {
+                    int id = int.Parse(parts[0]);
+                    string title = parts[1];
+                    string time = parts[2];
+                    double price = double.Parse(parts[3]);
+                    string filePath = parts[4];
+                    MoviesWrappers.Add(new MoviesWrapper(id, title, time, price, filePath));
+                }
+            }
+
+            var CustomerLines = File.ReadAllLines("Bookings.txt");
+
+            foreach(var line in CustomerLines)
+            {
+                var parts = line.Split(',');
+                if (parts.Length == 5)
+                {
+                    string name = parts[0];
+                    string bookingID = parts[1];
+                    int movieID = int.Parse(parts[2]);
+                    int ticketQuantity = int.Parse(parts[3]);
+                    bool loverSeat = bool.Parse(parts[4]);
+
+                    CustomerWrappers.Add(new CustomerWrapper(name,bookingID,movieID,ticketQuantity,loverSeat));
+                }
+            }
+        } 
+
+        private void ShowBookings()
+        {
+            pageOpened = Pages.ShowBooking;
+
+            RemovePreviousPageComponents();
+
+            Panel panel = new Panel
+            {
+                Size = new Size(rightPanel.Width - 20, (rightPanel.Height / 3) + (rightPanel.Height / 3)),
+                Location = new Point(10, 10),
+                BackColor = SystemColors.MenuBar,
+                AutoScroll = true
+            };
+
+            rightPanel.Controls.Add(panel);
+            panel.VerticalScroll.Enabled = true;
+            panel.HorizontalScroll.Enabled = false; 
+            var CustomerLines = File.ReadAllLines("Bookings.txt");
+            int yPos = 50;
+            Label label = new Label
+            {
+                Text = "Name, Booking ID, Movie ID, Ticket Quantity, LoverSeat",
+                AutoSize = true,
+                Location = new Point(10, 10),
+                Font = new Font(FontFamily.GenericSansSerif, 20, FontStyle.Bold)
+            };
+            foreach (var line in CustomerLines)
+            {
+                Label bookingLabel = new Label
+                {
+                    Text = line,
+                    AutoSize = true,
+                    Location = new Point(10, yPos),
+                    Font = new Font(FontFamily.GenericSansSerif, 12)
+                };
+                yPos += 30;
+
+                panel.Controls.Add(label);
+                panel.Controls.Add(bookingLabel);
+            }
         }
 
         #region LoginPage
         private Button LoginButton;
-        private Button CustomerButton;
         private TextBox PasswordTextBox;
         private TextBox UserNameTextBox;
         private Label PasswordLabel;
         private Label UserNameLabel;
+
         private void LoginButton_Click(object sender, EventArgs e)
         {
             if (adminUserWrapper.CheckPassword(UserNameTextBox.Text, PasswordTextBox.Text))
@@ -53,26 +125,14 @@ namespace ProjectWinForm
             else
             {
                 MessageBox.Show("Invalid username or password.");
-                CustomerButton = new Button
-                {
-                    Text = "Exit",
-                    Location = new Point(rightPanel.Width / 2 - 50, PasswordTextBox.Location.Y + 100),
-                    Size = new Size(100, 30)
-                };
-                this.Controls.Add(CustomerButton);
-                //check Admin 
-                //Add Moviess
-                //Delete Moviess
-                //Available Moviess
             }
         }
+
         private void LoginPageComponents()
         {
             RemovePreviousPageComponents();
 
             LoginButtonCreate();
-
-            CustomerButtonCreate();
 
             PasswordTextBoxCreate();
 
@@ -83,7 +143,6 @@ namespace ProjectWinForm
             UserNameLabelCreate();
 
             LoginButton.Click += LoginButton_Click;
-            rightPanel.Controls.Add(CustomerButton);
             rightPanel.Controls.Add(LoginButton);
             rightPanel.Controls.Add(PasswordTextBox);
             rightPanel.Controls.Add(UserNameTextBox);
@@ -94,10 +153,12 @@ namespace ProjectWinForm
 
             pageOpened = Pages.LoginPage;
         }
+
         private void button1_Click_1(object sender, EventArgs e)
         {
             LoginPageComponents();
         }
+
         private void LoginButtonCreate()
         {
             LoginButton = new Button
@@ -108,16 +169,7 @@ namespace ProjectWinForm
                 UseVisualStyleBackColor = true
             };
         }
-        private void CustomerButtonCreate()
-        {
-            CustomerButton = new Button
-            {
-                Name = "CustomerButton",
-                Text = "CustomerPortal",
-                TabIndex = 5,
-                UseVisualStyleBackColor = true
-            };
-        }
+
         private void PasswordTextBoxCreate()
         {
             PasswordTextBox = new TextBox
@@ -128,6 +180,7 @@ namespace ProjectWinForm
                 UseSystemPasswordChar = true
             };
         }
+
         private void UserNameTextBoxCreate()
         {
             UserNameTextBox = new TextBox
@@ -137,6 +190,7 @@ namespace ProjectWinForm
                 TabIndex = 2
             };
         }
+
         private void PasswordLabelCreate()
         {
             PasswordLabel = new Label
@@ -147,6 +201,7 @@ namespace ProjectWinForm
                 TabIndex = 1,
             };
         }
+
         private void UserNameLabelCreate()
         {
             UserNameLabel = new Label
@@ -157,6 +212,7 @@ namespace ProjectWinForm
                 TabIndex = 0,
             };
         }
+
         private void LoginPageSizesAndLocations()
         {
             var loginlocations = rightPanel.Width / 2 - 250;
@@ -175,12 +231,10 @@ namespace ProjectWinForm
             PasswordTextBox.Location = new Point(loginlocations, PasswordLabel.Location.Y + 50);
             PasswordTextBox.Size = new Size(400, 44);
 
-            CustomerButton.Size = new Size(180, 35);
-            CustomerButton.Location = new Point(loginlocations + 110, PasswordTextBox.Location.Y + 250);
-
             LoginButton.Size = new Size(180, 35);
             LoginButton.Location = new Point(loginlocations + 110, PasswordTextBox.Location.Y + 70);
         }
+
         #endregion
 
         #region BookingPage
@@ -191,7 +245,6 @@ namespace ProjectWinForm
         private Label MovieTitle;
         private Label MovieDetails;
         private Panel MoviesPanel;
-        private VScrollBar scrollBar;
         private Panel MovieDetailPanel;
 
         private void RemovePreviousPageComponents()
@@ -205,11 +258,14 @@ namespace ProjectWinForm
             pictureBoxes.Clear();
             MovieTitles.Clear();
         }
+
         private void BookingPageComponents()
         {
             CreateMoviesPanel();
 
             CreateMoviesBanner();
+
+            PictureBoxesSubscribeToMovieDetails();
 
             pageOpened = Pages.BookingPage;
         }
@@ -259,7 +315,6 @@ namespace ProjectWinForm
                 else
                     pictureBoxes[i].Location
                             = new Point(10, pictureBoxes[i - 1].Location.Y + 450);
-                pictureBoxes.Last().Click += (s, e) => ShowMovieDetails(movie);
 
                 MovieTitles.Add
                     (
@@ -277,6 +332,16 @@ namespace ProjectWinForm
                 MoviesPanel.Controls.Add(pictureBoxes.Last());
             }
         }
+
+        private void PictureBoxesSubscribeToMovieDetails()
+        {
+            for (int i = 0; i < MoviesWrappers.Count; i++)
+            {
+                int index = i;
+                pictureBoxes[i].Click += (s, e) => ShowMovieDetails(MoviesWrappers[index]);
+            }
+        }
+
         private void ShowMovieDetails(MoviesWrapper movie)
         {
             MovieTitle = new Label
@@ -287,6 +352,7 @@ namespace ProjectWinForm
                 Location = new Point(10, 10),
                 Font = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Bold)
             };
+
             MovieDetails = new Label
             {
                 Text = $"Id: " + movie.Id.ToString() + $"\nPrice: {movie.Price} Time: {movie.Time} ",
@@ -295,31 +361,149 @@ namespace ProjectWinForm
                 Location = new Point(10, 50),
                 Font = new Font(FontFamily.GenericSansSerif, 25)
             };
+
+            Button BookButton = new Button
+            {
+                Text = "Book Now",
+                Size = new Size(100, 30),
+                Location = new Point(MovieDetailPanel.Width - 120, MovieDetailPanel.Height - 50)
+            };
+
+            BookButton.Click += (s, e) => CustomerDetails(movie.Id);
+            MovieDetailPanel.Controls.Add(BookButton);
             MovieDetailPanel.Controls.Add(MovieTitle);
             MovieDetailPanel.Controls.Add(MovieDetails);
+        }
+        private void CustomerDetails(int movieID)
+        {
+            pageOpened = Pages.CustomerDetails;
+            RemovePreviousPageComponents();
+            Panel panel = new Panel
+            {
+                Size = new Size(rightPanel.Width - 20, (rightPanel.Height / 3) + (rightPanel.Height / 3)),
+                Location = new Point(10, 10),
+                BackColor = SystemColors.MenuBar
+            };
+
+            rightPanel.Controls.Add(panel);
+
+            Label NameLabel = new Label
+            {
+                Text = "Name",
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 - 200, 50),
+                Font = new Font(FontFamily.GenericSansSerif, 16)
+            };
+
+            Label TicketQuantityLabel = new Label
+            {
+                Text = "Ticket Quantity",
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 - 200, 250),
+                Font = new Font(FontFamily.GenericSansSerif, 16)
+            };
+            Label LoverSeatLabel = new Label
+            {
+                Text = "Lover Seat",
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 - 200, 350),
+                Font = new Font(FontFamily.GenericSansSerif, 16)
+            };
+
+            TextBox NameBox = new TextBox
+            {
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 + 100, 50)
+            };
+            TextBox TicketQuantityBox = new TextBox
+            {
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 + 100, 250)
+            };
+            CheckBox LoverSeatCheckBox = new CheckBox
+            {
+                Text = "Yes",
+                Size = new Size(100, 30),
+                Location = new Point(rightPanel.Width / 2 + 100, 350)
+            };
+            Button BookButton = new Button
+            {
+                Text = "Book",
+                Size = new Size(100, 30),
+                Location = new Point(rightPanel.Width / 2 - 100, 450)
+            };
+            
+            panel.Controls.Add(NameLabel);
+            panel.Controls.Add(TicketQuantityLabel);
+            panel.Controls.Add(LoverSeatLabel);
+            panel.Controls.Add(NameBox);
+            panel.Controls.Add(TicketQuantityBox);
+            panel.Controls.Add(LoverSeatCheckBox);
+            panel.Controls.Add(BookButton);
+
+            string BookingId;
+            if(CustomerWrappers.Count == 0)
+            {
+                BookingId = "0";
+            }
+            else
+            {
+                BookingId = (int.Parse(CustomerWrappers.Last().BookingID) + 1).ToString();
+            }
+
+                BookButton.Click += (s, e) => SaveBookingToTxt(NameBox.Text,
+                    BookingId,
+                    movieID,
+                    int.Parse(TicketQuantityBox.Text),
+                    LoverSeatCheckBox.Checked);
+
+        }
+        private void SaveBookingToTxt(string name,string booking,int movieID,int ticketQuantity,bool loverSear)
+        {
+            using (StreamWriter writer = new StreamWriter("Bookings.txt"))
+            {
+                foreach (var movie in MoviesWrappers)
+                {
+                    string line = $"{name},{booking},{movieID},{ticketQuantity},{loverSear}";
+                    writer.WriteLine(line);
+                }
+            }
+            MessageBox.Show(name + " has booked " + MoviesWrappers.FirstOrDefault(m => m.Id == movieID)?.Title + " successfully!");
         }
 
         #endregion
 
         #region AdminPage
 
-        void AdminPageComponents()
+        private void AdminPageComponents()
         {
+            pageOpened = Pages.AdminPage;
+
             Button AddMovieButton = new Button
             {
                 Text = "AddMovie",
                 Size = new Size(100, 30),
                 Location = new Point(rightPanel.Width / 2, rightPanel.Height / 2),
             };
-            AddMovieButton.Click += (e, s) => AddMovieButtonClick(AddMovieButton);
-            Button RemoveMovieButton = new Button();
+            AddMovieButton.Click += (e, s) => AddMovieButtonClick();
+
+            Button RemoveMovieButton = new Button
+            {
+                Text = "Remove Movie",
+                Size = new Size(100, 30),
+                Location = new Point(rightPanel.Width / 2, rightPanel.Height / 2 + 100),
+            };
+            RemoveMovieButton.Click += (e, s) => RemoveMovieButtonClick();
+
             rightPanel.Controls.Add(AddMovieButton);
+            rightPanel.Controls.Add(RemoveMovieButton);
         }
 
-        void AddMovieButtonClick(Button button)
+        private void AddMovieButtonClick()
         {
-            button.Dispose();
-            MessageBox.Show("Worked");
+            RemovePreviousPageComponents();
+            pageOpened = Pages.AddMovie;
+
             Panel panel = new Panel
             {
                 Size = new Size(rightPanel.Width - 70, (rightPanel.Height / 3) + (rightPanel.Height / 3)),
@@ -328,35 +512,36 @@ namespace ProjectWinForm
             };
             rightPanel.Controls.Add(panel);
 
+            int fontSize = 10;
+            int labelX = 100;
+            int labelY = 50;
             Label Idlabel = new Label
             {
                 Text = "Id",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 - 100, 500)
+                Size = new Size(labelX, labelY),
+                Font = new Font(FontFamily.GenericSansSerif, fontSize),
+                Location = new Point(rightPanel.Width / 2 - 100, 100)
             };
             Label Titlelabel = new Label
             {
                 Text = "Title",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 - 100, 500)
-            }; 
+                Size = new Size(labelX, labelY),
+                Font = new Font(FontFamily.GenericSansSerif, fontSize),
+                Location = new Point(rightPanel.Width / 2 - 100, 200)
+            };
             Label Timelabel = new Label
             {
                 Text = "Time",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 - 100, 500)
-            }; 
+                Size = new Size(labelX, labelY),
+                Font = new Font(FontFamily.GenericSansSerif, fontSize),
+                Location = new Point(rightPanel.Width / 2 - 100, 300)
+            };
             Label Pricelabel = new Label
             {
                 Text = "Price",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 - 100, 500)
-            };
-            Label Imagelabel = new Label
-            {
-                Text = "Image",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 - 100, 500)
+                Size = new Size(labelX, labelY),
+                Font = new Font(FontFamily.GenericSansSerif, fontSize),
+                Location = new Point(rightPanel.Width / 2 - 100, 400)
             };
 
             TextBox IdBox = new TextBox
@@ -379,73 +564,68 @@ namespace ProjectWinForm
                 Size = new Size(100, 30),
                 Location = new Point(rightPanel.Width / 2 + 100, 400)
             };
-            Button ImageButton = new Button
-            {
-                Text = "Image File",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 - 100, 500)
-            };
 
-            Button BackButton = new Button
-            {
-                Text = "Back",
-                Size = new Size(100, 30),
-                Location = new Point(10, 10)
-            };
             Button AddButton = new Button
             {
                 Text = "Add",
                 Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 600)
+                Location = new Point(rightPanel.Width / 2 + 100, 500)
             };
 
-            string FilePath = GetImage();
-
-            ImageButton.Click += (s, e) => GetImage(FilePath);
-            BackButton.Click += (s, e) => BackButtonClick();
-            AddButton.Click += (s, e) => AddButtonClick(IdBox,TitleBox,TimeBox,PriceBox,FilePath);
+            AddButton.Click += (s, e) => AddButtonClick(IdBox, TitleBox, TimeBox, PriceBox);
 
 
             panel.Controls.Add(AddButton);
-            panel.Controls.Add(BackButton);
             panel.Controls.Add(IdBox);
             panel.Controls.Add(PriceBox);
-            panel.Controls.Add(ImageButton);
             panel.Controls.Add(TitleBox);
             panel.Controls.Add(TimeBox);
 
             panel.Controls.Add(Idlabel);
             panel.Controls.Add(Titlelabel);
-            panel.Controls.Add(Imagelabel);
             panel.Controls.Add(Pricelabel);
             panel.Controls.Add(Timelabel);
 
         }
 
-        void AddButtonClick(TextBox IdBox, TextBox TitleBox, TextBox TimeBox, TextBox PriceBox,string FilePath)
-        {
-            MoviesWrappers.Add
-                (new MoviesWrapper
-                (int.Parse(IdBox.Text),
-                TitleBox.Text, 
-                TimeBox.Text, 
-                Double.Parse(PriceBox.Text), 
-                FilePath));
-            MessageBox.Show(
-                  MoviesWrappers.Last().FilePath + " "  
-                + MoviesWrappers.Last().Id+ " "
-                + MoviesWrappers.Last().Time+ " "
-                + MoviesWrappers.Last().Title+ " "
-                + MoviesWrappers.Last().Price + " "
-                );
-        }
-        void BackButtonClick()
+        private void RemoveMovieButtonClick()
         {
             RemovePreviousPageComponents();
-            AdminPageComponents();
+
+            pageOpened = Pages.RemoveMovie;
+
+            CreateMoviesPanel();
+
+            CreateMoviesBanner();
+
+            PictureBoxesSubscribeToMovieDetails();
+
+            SubscribeRemoveMovieButtonCreate();
+
+
         }
-        void GetImage(string FilePath)
+
+        private void SubscribeRemoveMovieButtonCreate()
         {
+            for (int i = 0; i < MoviesWrappers.Count; i++)
+            {
+                int index = i;
+                pictureBoxes[i].Click += (s, e) => CreateMovieRemoveButton(MoviesWrappers[index]);
+            }
+        }
+
+        private void CreateMovieRemoveButton(MoviesWrapper movie)
+        {
+            MoviesWrappers.Remove(movie);
+
+            RemovePreviousPageComponents();
+
+            RemoveMovieButtonClick();
+        }
+
+        private void AddButtonClick(TextBox IdBox, TextBox TitleBox, TextBox TimeBox, TextBox PriceBox)
+        {
+            string FilePath;
             OpenFileDialog ofd = new OpenFileDialog
             {
                 Title = "Select an Image",
@@ -458,17 +638,59 @@ namespace ProjectWinForm
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 FilePath = ofd.FileName;
-                MessageBox.Show("Selected file path:\n" + FilePath);
+                MoviesWrappers.Add
+                (new MoviesWrapper
+                (int.Parse(IdBox.Text),
+                TitleBox.Text,
+                TimeBox.Text,
+                Double.Parse(PriceBox.Text),
+                FilePath));
+            }
+
+            MessageBox.Show("Movie Added Successfully!");
+            SaveMoviesToTxt(MoviesWrappers);
+            BackButtonClick();
+        }
+
+        private void BackButtonClick()
+        {
+            if (pageOpened == Pages.AddMovie || pageOpened == Pages.RemoveMovie)
+            {
+                RemovePreviousPageComponents();
+                AdminPageComponents();
+            }
+            else if (pageOpened == Pages.BookingPage || pageOpened == Pages.AdminPage)
+            {
+                RemovePreviousPageComponents();
+                LoginPageComponents();
+            }else if(pageOpened == Pages.CustomerDetails)
+            {
+                RemoveMovieButtonClick();
+                BookingPageComponents();
             }
         }
 
         #endregion
+
         private void BookingPage_Click(object sender, EventArgs e)
         {
             RemovePreviousPageComponents();
 
             BookingPageComponents();
         }
+
+        public void SaveMoviesToTxt(List<MoviesWrapper> movies)
+        {
+            using (StreamWriter writer = new StreamWriter("Movies.txt"))
+            {
+                foreach (var movie in movies)
+                {
+                    string line = $"{movie.Id},{movie.Title},{movie.Time},{movie.Price},{movie.FilePath}";
+                    writer.WriteLine(line);
+                }
+            }
+        }
+
         public class MoviesWrapper : IDisposable
         {
             // Native method imports
@@ -558,6 +780,7 @@ namespace ProjectWinForm
                 Dispose(false);
             }
         }
+
         public class AdminUserWrapper : IDisposable
         {
             // Native method imports
@@ -609,6 +832,102 @@ namespace ProjectWinForm
             }
 
             ~AdminUserWrapper()
+            {
+                Dispose(false);
+            }
+        }
+
+        public class CustomerWrapper
+        {
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+            private static extern IntPtr CreateCustomerClass(string n,string b,int movieID,int ticketQuantity,bool loverseat);
+
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl)]
+            private static extern void DestroyCustomerClass(IntPtr instance);
+
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+            private static extern IntPtr GetCustomerName(IntPtr instance);
+
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+            private static extern IntPtr GetCustomerBookingID(IntPtr instance);
+
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl)]
+            private static extern int GetCustomerMovieID(IntPtr instance);
+
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl)]
+            private static extern int GetCustomerTicketQuantity(IntPtr instance);
+
+            [DllImport("Customer.dll", CallingConvention = CallingConvention.Cdecl)]
+            private static extern bool GetCustomerLoverSeat(IntPtr instance);
+
+            private IntPtr _nativeInstance;
+            private bool _disposed = false;
+
+            public CustomerWrapper(string name, string bookingID, int movieID, int ticketQuantity, bool loverSeat)
+            {
+                _nativeInstance = CreateCustomerClass(name, bookingID, movieID, ticketQuantity, loverSeat);
+                if (_nativeInstance == IntPtr.Zero)
+                {
+                    throw new Exception("Failed to create Customer instance");
+                }
+            }
+
+            public string Name
+            {
+                get
+                {
+                    IntPtr ptr = GetCustomerName(_nativeInstance);
+                    return Marshal.PtrToStringAnsi(ptr);
+                }
+            }
+            public string BookingID
+            {
+                get
+                {
+                    IntPtr ptr = GetCustomerBookingID(_nativeInstance);
+                    return Marshal.PtrToStringAnsi(ptr);
+                }
+            }
+            public int MovieID
+            {
+                get
+                {
+                    return GetCustomerMovieID(_nativeInstance);
+                }
+            }
+            public int TicketQuantity
+            {
+                get
+                {
+                    return GetCustomerTicketQuantity(_nativeInstance);
+                }
+            }
+            public bool LoverSeat
+            {
+                get
+                {
+                    return GetCustomerLoverSeat(_nativeInstance);
+                }
+            }
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!_disposed)
+                {
+                    if (_nativeInstance != IntPtr.Zero)
+                    {
+                        DestroyCustomerClass(_nativeInstance);
+                        _nativeInstance = IntPtr.Zero;
+                    }
+                    _disposed = true;
+                }
+            }
+            ~CustomerWrapper()
             {
                 Dispose(false);
             }
