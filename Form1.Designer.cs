@@ -27,11 +27,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             leftPanel = new Panel();
+            BackButton = new Button();
             BookingPageButton = new Button();
             LoginPageButton = new Button();
             ShowBookingPageButton = new Button();
             rightPanel = new Panel();
-            BackButton = new Button();
             leftPanel.SuspendLayout();
             SuspendLayout();
             // 
@@ -41,11 +41,21 @@
             leftPanel.Controls.Add(BackButton);
             leftPanel.Controls.Add(BookingPageButton);
             leftPanel.Controls.Add(LoginPageButton);
+            leftPanel.Controls.Add(ShowBookingPageButton);
             leftPanel.Dock = DockStyle.Left;
             leftPanel.Location = new Point(0, 0);
             leftPanel.Name = "leftPanel";
             leftPanel.Size = new Size(225, 594);
             leftPanel.TabIndex = 0;
+            // 
+            // BackButton
+            // 
+            BackButton.Location = new Point(11, 8);
+            BackButton.Name = "BackButton";
+            BackButton.Size = new Size(112, 34);
+            BackButton.TabIndex = 4;
+            BackButton.Text = "Back";
+            BackButton.UseVisualStyleBackColor = true;
             // 
             // BookingPageButton
             // 
@@ -68,10 +78,12 @@
             LoginPageButton.Text = "LoginPage";
             LoginPageButton.UseVisualStyleBackColor = true;
             LoginPageButton.Click += button1_Click_1;
-
+            // 
+            // ShowBookingPageButton
+            // 
             ShowBookingPageButton.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             ShowBookingPageButton.Location = new Point(50, 150);
-            ShowBookingPageButton.Name = "LoginPageButton";
+            ShowBookingPageButton.Name = "ShowBookingPageButton";
             ShowBookingPageButton.Size = new Size(112, 34);
             ShowBookingPageButton.TabIndex = 4;
             ShowBookingPageButton.Text = "ShowBooking";
@@ -80,20 +92,13 @@
             // rightPanel
             // 
             rightPanel.BackColor = SystemColors.AppWorkspace;
+            rightPanel.BackgroundImage = (Image)resources.GetObject("rightPanel.BackgroundImage");
+            rightPanel.BackgroundImageLayout = ImageLayout.Stretch;
             rightPanel.Dock = DockStyle.Right;
-            rightPanel.Location = new Point(224, 0);
+            rightPanel.Location = new Point(245, 0);
             rightPanel.Name = "rightPanel";
             rightPanel.Size = new Size(797, 594);
             rightPanel.TabIndex = 1;
-            // 
-            // button1
-            // 
-            BackButton.Location = new Point(11, 8);
-            BackButton.Name = "button1";
-            BackButton.Size = new Size(112, 34);
-            BackButton.TabIndex = 4;
-            BackButton.Text = "Back";
-            BackButton.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -102,7 +107,6 @@
             ClientSize = new Size(1021, 594);
             Controls.Add(rightPanel);
             Controls.Add(leftPanel);
-            leftPanel.Controls.Add(ShowBookingPageButton);
             Name = "Form1";
             Text = "Form1";
             Load += Form1_Load;

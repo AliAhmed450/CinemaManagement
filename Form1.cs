@@ -19,8 +19,8 @@ namespace ProjectWinForm
 
             var loginlocations = rightPanel.Width / 2 - 250;
             leftPanel.Size = new Size((1980 / 100) * 15, leftPanel.Height);
-            rightPanel.Location = new Point(leftPanel.Width, 0);
-            rightPanel.Size = new Size((1980 / 100) * 85 + 20, rightPanel.Height);
+            rightPanel.Location = new Point(leftPanel.Width + 10, 0);
+            rightPanel.Size = new Size((1980 / 100) * 85 + 10, rightPanel.Height);
             LoginPageComponents();
 
             BackButton.Click += (s, e) => BackButtonClick();
@@ -52,7 +52,7 @@ namespace ProjectWinForm
             foreach(var line in CustomerLines)
             {
                 var parts = line.Split(',');
-                if (parts.Length == 5)
+                if (parts.Length == 6)
                 {
                     string name = parts[0];
                     string bookingID = parts[1];
@@ -86,7 +86,7 @@ namespace ProjectWinForm
             int yPos = 50;
             Label label = new Label
             {
-                Text = "Name, Booking ID, Movie ID, Ticket Quantity, LoverSeat",
+                Text = "Name, Booking ID, Movie ID, Ticket Quantity, LoverSeat,Movie Name",
                 AutoSize = true,
                 Location = new Point(10, 10),
                 Font = new Font(FontFamily.GenericSansSerif, 20, FontStyle.Bold)
@@ -198,7 +198,7 @@ namespace ProjectWinForm
                 Name = "PasswordLabel",
                 Text = "Password",
                 Font = new Font("Microsoft Sans Serif", 16F),
-                TabIndex = 1,
+                BackColor = Color.Transparent
             };
         }
 
@@ -209,7 +209,7 @@ namespace ProjectWinForm
                 Text = "UserName",
                 Font = new Font("Microsoft Sans Serif", 16F),
                 Name = "UserNameLabel",
-                TabIndex = 0,
+                BackColor = Color.Transparent
             };
         }
 
@@ -242,8 +242,8 @@ namespace ProjectWinForm
         private List<MoviesWrapper> MoviesWrappers = new List<MoviesWrapper>();
         private List<PictureBox> pictureBoxes = new List<PictureBox>();
         private List<Label> MovieTitles = new List<Label>();
-        private Label MovieTitle;
-        private Label MovieDetails;
+        private Label MovieTitle = new Label();
+        private Label MovieDetails = new Label();
         private Panel MoviesPanel;
         private Panel MovieDetailPanel;
 
@@ -278,6 +278,7 @@ namespace ProjectWinForm
                 Location = new Point(10, 10),
                 Size = new Size(400, (rightPanel.Size.Height / 2) + (rightPanel.Size.Height / 3)),
                 BackColor = SystemColors.GrayText,
+                BorderStyle = BorderStyle.FixedSingle,
                 AutoScroll = true,
 
             };
@@ -290,7 +291,7 @@ namespace ProjectWinForm
                 Name = "DetailsPanel",
                 Location = new Point(MoviesPanel.Width + MoviesPanel.Location.X + 10, 10),
                 Size = new Size(rightPanel.Width - MoviesPanel.Width - MoviesPanel.Location.X - 20, MoviesPanel.Height),
-                BackColor = SystemColors.MenuHighlight
+                BackColor = Color.DeepPink
             };
             rightPanel.Controls.Add(MovieDetailPanel);
 
@@ -344,33 +345,35 @@ namespace ProjectWinForm
 
         private void ShowMovieDetails(MoviesWrapper movie)
         {
-            MovieTitle = new Label
-            {
-                Text = movie.Title,
-                AutoSize = true,
-                TextAlign = ContentAlignment.TopLeft,
-                Location = new Point(10, 10),
-                Font = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Bold)
-            };
+            if(MovieTitle.IsDisposed){
+                MovieTitle = new Label();
+                MovieDetails = new Label();
+            }
+            MovieTitle.Text = movie.Title;
+            MovieTitle.AutoSize = true;
+            MovieTitle.TextAlign = ContentAlignment.TopLeft;
+            MovieTitle.Location = new Point(10, 10);
+            MovieTitle.Font = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Bold);
 
-            MovieDetails = new Label
-            {
-                Text = $"Id: " + movie.Id.ToString() + $"\nPrice: {movie.Price} Time: {movie.Time} ",
-                AutoSize = true,
-                TextAlign = ContentAlignment.TopLeft,
-                Location = new Point(10, 50),
-                Font = new Font(FontFamily.GenericSansSerif, 25)
-            };
+            MovieDetails.Text = $"Id: " + movie.Id.ToString() + $"\nPrice: {movie.Price} Time: {movie.Time} ";
+            MovieDetails.AutoSize = true;
+            MovieDetails.TextAlign = ContentAlignment.TopLeft;
+            MovieDetails.Location = new Point(10, 50);
+            MovieDetails.Font = new Font(FontFamily.GenericSansSerif, 25);
 
-            Button BookButton = new Button
-            {
-                Text = "Book Now",
-                Size = new Size(100, 30),
-                Location = new Point(MovieDetailPanel.Width - 120, MovieDetailPanel.Height - 50)
-            };
 
-            BookButton.Click += (s, e) => CustomerDetails(movie.Id);
-            MovieDetailPanel.Controls.Add(BookButton);
+
+            if (pageOpened == Pages.BookingPage)
+            {
+                Button BookButton = new Button
+                {
+                    Text = "Book Now",
+                    Size = new Size(100, 30),
+                    Location = new Point(MovieDetailPanel.Width - 120, MovieDetailPanel.Height - 50)
+                };
+                BookButton.Click += (s, e) => CustomerDetails(movie.Id);
+                MovieDetailPanel.Controls.Add(BookButton);
+            }
             MovieDetailPanel.Controls.Add(MovieTitle);
             MovieDetailPanel.Controls.Add(MovieDetails);
         }
@@ -382,10 +385,9 @@ namespace ProjectWinForm
             {
                 Size = new Size(rightPanel.Width - 20, (rightPanel.Height / 3) + (rightPanel.Height / 3)),
                 Location = new Point(10, 10),
-                BackColor = SystemColors.MenuBar
+                BackColor = Color.Transparent
             };
 
-            rightPanel.Controls.Add(panel);
 
             Label NameLabel = new Label
             {
@@ -399,14 +401,14 @@ namespace ProjectWinForm
             {
                 Text = "Ticket Quantity",
                 Size = new Size(200, 30),
-                Location = new Point(rightPanel.Width / 2 - 200, 250),
+                Location = new Point(rightPanel.Width / 2 - 200, 150),
                 Font = new Font(FontFamily.GenericSansSerif, 16)
             };
             Label LoverSeatLabel = new Label
             {
                 Text = "Lover Seat",
                 Size = new Size(200, 30),
-                Location = new Point(rightPanel.Width / 2 - 200, 350),
+                Location = new Point(rightPanel.Width / 2 - 200, 250),
                 Font = new Font(FontFamily.GenericSansSerif, 16)
             };
 
@@ -418,13 +420,13 @@ namespace ProjectWinForm
             TextBox TicketQuantityBox = new TextBox
             {
                 Size = new Size(200, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 250)
+                Location = new Point(rightPanel.Width / 2 + 100, 150)
             };
             CheckBox LoverSeatCheckBox = new CheckBox
             {
                 Text = "Yes",
                 Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 350)
+                Location = new Point(rightPanel.Width / 2 + 100, 250)
             };
             Button BookButton = new Button
             {
@@ -440,6 +442,7 @@ namespace ProjectWinForm
             panel.Controls.Add(TicketQuantityBox);
             panel.Controls.Add(LoverSeatCheckBox);
             panel.Controls.Add(BookButton);
+            rightPanel.Controls.Add(panel);
 
             string BookingId;
             if(CustomerWrappers.Count == 0)
@@ -458,13 +461,14 @@ namespace ProjectWinForm
                     LoverSeatCheckBox.Checked);
 
         }
-        private void SaveBookingToTxt(string name,string booking,int movieID,int ticketQuantity,bool loverSear)
+        private void SaveBookingToTxt(string name,string booking,int movieID,int ticketQuantity,bool loverSeat)
         {
+            CustomerWrappers.Add(new CustomerWrapper(name, booking, movieID, ticketQuantity, loverSeat));
             using (StreamWriter writer = new StreamWriter("Bookings.txt"))
             {
-                foreach (var movie in MoviesWrappers)
+                foreach (var customer in CustomerWrappers)
                 {
-                    string line = $"{name},{booking},{movieID},{ticketQuantity},{loverSear}";
+                    string line = $"{customer.Name}   ,{customer.BookingID}  ,{customer.MovieID},   {customer.TicketQuantity},   {customer.LoverSeat},\t\t{MoviesWrappers.FirstOrDefault(m => m.Id == movieID)?.Title}";
                     writer.WriteLine(line);
                 }
             }
@@ -475,23 +479,28 @@ namespace ProjectWinForm
 
         #region AdminPage
 
-        private void AdminPageComponents()
+        private void AdminPageComponents() //Displays 2 buttons
         {
             pageOpened = Pages.AdminPage;
+
+            int ButtonX = 200;
+            int ButtonY = 70;
 
             Button AddMovieButton = new Button
             {
                 Text = "AddMovie",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2, rightPanel.Height / 2),
+                Size = new Size(ButtonX,ButtonY),
+                Location = new Point(rightPanel.Width / 2 - 100, rightPanel.Height / 2 - 100),
+                BackColor = Color.LightCoral
             };
             AddMovieButton.Click += (e, s) => AddMovieButtonClick();
 
             Button RemoveMovieButton = new Button
             {
                 Text = "Remove Movie",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2, rightPanel.Height / 2 + 100),
+                Size = new Size(ButtonX, ButtonY),
+                Location = new Point(rightPanel.Width / 2 - 100, rightPanel.Height / 2),
+                BackColor = Color.LightCoral
             };
             RemoveMovieButton.Click += (e, s) => RemoveMovieButtonClick();
 
@@ -506,70 +515,72 @@ namespace ProjectWinForm
 
             Panel panel = new Panel
             {
-                Size = new Size(rightPanel.Width - 70, (rightPanel.Height / 3) + (rightPanel.Height / 3)),
+                Size = new Size(rightPanel.Width - 20, (rightPanel.Height / 3) + (rightPanel.Height / 3)),
                 Location = new Point(10, 10),
-                BackColor = SystemColors.MenuBar
+                BackColor = Color.Transparent,
+                BackgroundImage = Image.FromFile("C:\\Users\\Laptop Solutions\\Downloads\\blueG.png"),
             };
             rightPanel.Controls.Add(panel);
 
-            int fontSize = 10;
+            int fontSize = 16;
             int labelX = 100;
             int labelY = 50;
             Label Idlabel = new Label
             {
-                Text = "Id",
+                Text = "Id:",
                 Size = new Size(labelX, labelY),
                 Font = new Font(FontFamily.GenericSansSerif, fontSize),
-                Location = new Point(rightPanel.Width / 2 - 100, 100)
+                Location = new Point(rightPanel.Width / 2 - 200, 100)
             };
             Label Titlelabel = new Label
             {
-                Text = "Title",
+                Text = "Title:",
                 Size = new Size(labelX, labelY),
                 Font = new Font(FontFamily.GenericSansSerif, fontSize),
-                Location = new Point(rightPanel.Width / 2 - 100, 200)
+                Location = new Point(rightPanel.Width / 2 - 200, 200)
             };
             Label Timelabel = new Label
             {
-                Text = "Time",
+                Text = "Time:",
                 Size = new Size(labelX, labelY),
                 Font = new Font(FontFamily.GenericSansSerif, fontSize),
-                Location = new Point(rightPanel.Width / 2 - 100, 300)
+                Location = new Point(rightPanel.Width / 2 - 200, 300)
             };
             Label Pricelabel = new Label
             {
-                Text = "Price",
+                Text = "Price:",
                 Size = new Size(labelX, labelY),
                 Font = new Font(FontFamily.GenericSansSerif, fontSize),
-                Location = new Point(rightPanel.Width / 2 - 100, 400)
+                Location = new Point(rightPanel.Width / 2 - 200, 400)
             };
 
             TextBox IdBox = new TextBox
             {
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 100)
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 , 100)
             };
             TextBox TitleBox = new TextBox
             {
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 200)
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 , 200)
             };
             TextBox TimeBox = new TextBox
             {
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 300)
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 , 300)
             };
             TextBox PriceBox = new TextBox
             {
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 400)
+                Size = new Size(200, 30),
+                Location = new Point(rightPanel.Width / 2 , 400)
             };
 
             Button AddButton = new Button
             {
                 Text = "Add",
-                Size = new Size(100, 30),
-                Location = new Point(rightPanel.Width / 2 + 100, 500)
+                Size = new Size(200, 50),
+                Location = new Point(rightPanel.Width / 2  - 100, 500),
+                BackColor = Color.Coral,
             };
 
             AddButton.Click += (s, e) => AddButtonClick(IdBox, TitleBox, TimeBox, PriceBox);
@@ -594,6 +605,8 @@ namespace ProjectWinForm
 
             pageOpened = Pages.RemoveMovie;
 
+            SaveMoviesToTxt(MoviesWrappers);
+
             CreateMoviesPanel();
 
             CreateMoviesBanner();
@@ -602,7 +615,6 @@ namespace ProjectWinForm
 
             SubscribeRemoveMovieButtonCreate();
 
-
         }
 
         private void SubscribeRemoveMovieButtonCreate()
@@ -610,17 +622,27 @@ namespace ProjectWinForm
             for (int i = 0; i < MoviesWrappers.Count; i++)
             {
                 int index = i;
-                pictureBoxes[i].Click += (s, e) => CreateMovieRemoveButton(MoviesWrappers[index]);
+                pictureBoxes[i].Click += (s, e) => CreateFinalMovieRemoveButton(MoviesWrappers[index]);
             }
         }
+        Button RemoveMovie;
 
-        private void CreateMovieRemoveButton(MoviesWrapper movie)
+        private void CreateFinalMovieRemoveButton(MoviesWrapper movie)
         {
-            MoviesWrappers.Remove(movie);
+            RemoveMovie = new Button
+            {
+                Text = "Remove Movie",
+                Size = new Size(200, 50),
+                Location = new Point(MovieDetailPanel.Width - 220, MovieDetailPanel.Height - 60),
+            };
 
-            RemovePreviousPageComponents();
+            RemoveMovie.Click += (s, e) =>
+            {
+                MoviesWrappers.Remove(movie);
+                RemoveMovieButtonClick();
+            };
 
-            RemoveMovieButtonClick();
+            MovieDetailPanel.Controls.Add(RemoveMovie);
         }
 
         private void AddButtonClick(TextBox IdBox, TextBox TitleBox, TextBox TimeBox, TextBox PriceBox)
@@ -645,6 +667,19 @@ namespace ProjectWinForm
                 TimeBox.Text,
                 Double.Parse(PriceBox.Text),
                 FilePath));
+                string sourcePath = ofd.FileName;
+
+                // Path to the release folder (bin\Release\netX\)
+                string releasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Images");
+
+                // Create the folder if it doesn't exist
+                if (!Directory.Exists(releasePath))
+                    Directory.CreateDirectory(releasePath);
+
+                string fileName = Path.GetFileName(sourcePath);
+                string destPath = Path.Combine(releasePath, fileName);
+
+                    File.Copy(sourcePath, destPath, true); // Overwrite if exists
             }
 
             MessageBox.Show("Movie Added Successfully!");
